@@ -12,34 +12,20 @@ class Feature(models.Model):
 class Banner(models.Model):
     """Model class for banners"""
 
-    tag_id = models.ManyToManyField(
-        Tag,
-        max_length=5,
-        unique=True,
-        verbose_name="list_of_tags"
-    )
-    feature_id = models.ForeignKey(
-        Feature,
-        on_delete=models.CASCADE,
-        max_length=5,
-        unique=True
-    )
-    content = models.JSONField(
-
-    )
+    def content_data():
+        return {'title':"",'text':"",'url':""}
+    
+    tag = models.ManyToManyField(Tag,verbose_name="list_of_tags")
+    feature = models.ForeignKey(Feature,on_delete=models.CASCADE)
+    content = models.JSONField(default = content_data())
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-
-
-
+    
 class User(models.Model):
     """Model class for users"""
+    username = models.CharField(max_length=64,unique=True)
     use_last_revision = models.BooleanField(default=False)
-    tag_id = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        unique=True
-    )
+    user_tag = models.ForeignKey(Tag,on_delete=models.CASCADE)
     
