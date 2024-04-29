@@ -11,14 +11,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
-            "--number",help="How many tags do you want to create?"
+            "--number",type=int,help="How many features do you want to create?"
         )
     
     
     def handle(self, *args, **kwargs):
-        # Create dummy tags
-        number = kwargs.get.number()
-        for _ in range(int(number)):
+        # Create dummy features
+        number = kwargs.get('number')
+        for _ in range(number):
             Feature.objects.create()
 
         self.stdout.write(self.style.SUCCESS(f'{number} feature objects created successfully'))

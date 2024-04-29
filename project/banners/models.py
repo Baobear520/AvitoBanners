@@ -15,7 +15,7 @@ class Banner(models.Model):
     def content_data():
         return {'title':"",'text':"",'url':""}
     
-    tag = models.ManyToManyField(Tag,verbose_name="list_of_tags")
+    tags = models.ManyToManyField(Tag,verbose_name="list_of_tags")
     feature = models.ForeignKey(Feature,on_delete=models.CASCADE)
     content = models.JSONField(default = content_data())
     is_active = models.BooleanField(default=True)
