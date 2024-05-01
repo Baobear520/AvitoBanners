@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Create dummy tags
         number = kwargs.get('number')
-        for _ in range(number):
+        for _ in range(1,number+1):
             Tag.objects.create()
 
         self.stdout.write(self.style.SUCCESS(f'{number} tag objects created successfully'))
