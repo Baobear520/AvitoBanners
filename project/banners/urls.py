@@ -4,7 +4,7 @@ from banners import views
 
 
 urlpatterns = [
-    #path('user-banner/',),
+    path('user-banner/',views.User.as_view()),
     path('banner/',views.BannerList.as_view()),
-    path('banner/<int:pk>',views.BannerDetail.as_view())
+    #path('banner/<int:pk>',views.Banner.as_view())
 ]
