@@ -18,7 +18,16 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Create dummy tags
         number = kwargs.get('number')
-        for _ in range(1,number+1):
-            Tag.objects.create()
-
+        
+        #Validating user's input
+        if not isinstance(number,int) or number <= 0:
+            self.stdout.write(self.style.WARNING('Please provide a valid number of tags to create'))
+            return
+        try:
+            for _ in range(1,number+1):
+                Tag.objects.create()
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"There was an error while creating tags - {e}"))
+            return
+        
         self.stdout.write(self.style.SUCCESS(f'{number} tag objects created successfully'))
