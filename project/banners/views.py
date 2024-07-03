@@ -51,13 +51,16 @@ class User(APIView):
         use_last_revision = request.query_params.get('use_last_revision', False)
 
         if not tag_id or not feature_id:
-            return Response({"error": "Incorrect data. Please provide both tag_id and feature_id"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Incorrect data. Please provide both tag_id and feature_id"}, 
+                status=status.HTTP_400_BAD_REQUEST)
 
         # Filter banners based on tag_id and feature_id
         filtered_banners = BannerTagFeature.objects.filter(tag=tag_id, feature=feature_id)
         banner = get_object_or_404(filtered_banners)
+        print(banner)
 
         #Serializing only the content field
-        serializer = BannerTagFeatureSerializer(banner)
+        serializer = BannerContentSerializer(banner)
         return Response(serializer.data)
         
