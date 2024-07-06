@@ -3,8 +3,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from banners.models import Banner, BannerTagFeature, UserBanner
-from banners.serializers import BannerContentSerializer, BannerSerializer, BannerTagFeatureSerializer,UserSerializer
+from banners.models import Banner, BannerTagFeature
+from banners.serializers import BannerSerializer, BannerTagFeatureSerializer
 
 
 class BannerList(APIView):
@@ -21,7 +21,6 @@ class BannerList(APIView):
         serializer = BannerSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         banner = serializer.save()
-        print(banner.id)
 
         # Process tags and create BannerTagFeature instances
         tags = request.data.get('tags', [])
@@ -48,19 +47,24 @@ class User(APIView):
     def get(self, request):
         tag_id = request.query_params.get('tag_id')
         feature_id = request.query_params.get('feature_id')
-        use_last_revision = request.query_params.get('use_last_revision', False)
+        use_last_revision = request.query_params.get('use_last_revision', 'False').lower()==True
 
         if not tag_id or not feature_id:
             return Response(
                 {"error": "Incorrect data. Please provide both tag_id and feature_id"}, 
                 status=status.HTTP_400_BAD_REQUEST)
+        
+        # if use_last_revision:
+        #     do smth
+        # else: 
+        # do smth else
+            
 
         # Filter banners based on tag_id and feature_id
-        filtered_banners = BannerTagFeature.objects.filter(tag=tag_id, feature=feature_id)
-        banner = get_object_or_404(filtered_banners)
-        print(banner)
+        banner = get_object_or_404(BannerTagFeature, tag=tag_id, feature=feature_id)
 
+    
         #Serializing only the content field
-        serializer = BannerContentSerializer(banner)
+        serializer = BannerTagFeatureSerializer(banner)
         return Response(serializer.data)
         
