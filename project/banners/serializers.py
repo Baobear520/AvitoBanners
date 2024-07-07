@@ -16,9 +16,7 @@ class BannerSerializer(serializers.ModelSerializer):
         fields = ['id','tags','feature','content','is_active','created_at','updated_at']
        
 class BannerTagFeatureSerializer(serializers.ModelSerializer):
-    title = serializers.CharField(source='banner.content.title')
-    text = serializers.CharField(source='banner.content.text')
-    url = serializers.URLField(source='banner.content.url')
+    banner = BannerSerializer()
     class Meta:
         model = BannerTagFeature
-        fields = ['title','text','url']
+        fields = ['tag','feature','banner']

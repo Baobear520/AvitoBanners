@@ -19,6 +19,7 @@ class BannerList(APIView):
 
 
     def post(self, request):
+        
         data = request.data
         serializer = BannerSerializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -35,12 +36,14 @@ class BannerList(APIView):
             banner_tag_feature_serializer = BannerTagFeatureSerializer(data=tag_feature_data)
             banner_tag_feature_serializer.is_valid(raise_exception=True)
             banner_tag_feature_serializer.save()
-            
-        return Response(data={'banner_id': serializer.data['id']}, status=status.HTTP_201_CREATED)
+              
+        #rendering only the required fields from the banner object
+        return Response(data={
+            'banner_id': serializer.data['id']
+            },
+        status=status.HTTP_201_CREATED)
         
         
-    
-
 class User(APIView):
     """
     Show current user's banner
@@ -63,16 +66,20 @@ class User(APIView):
             
 
         # Filter banners based on tag_id and feature_id
+        # Select related banner object
         try:
-            banner = BannerTagFeature.objects.get(tag=tag_id, feature=feature_id)
-
+            banner = BannerTagFeature.objects.select_related('banner').get(
+                tag=tag_id, feature=feature_id
+                )
+        
         except BannerTagFeature.DoesNotExist:
             return Response(
                 {"error": "No banner found matching the given 'tag_id' and 'feature_id'"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        #Serializing only the content field
         serializer = BannerTagFeatureSerializer(banner)
-        return Response(serializer.data)
+        
+        #Render only the content field
+        return Response(serializer.data['banner']['content'])
         
