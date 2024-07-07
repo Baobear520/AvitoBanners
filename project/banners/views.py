@@ -1,9 +1,7 @@
-
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from banners.models import Banner, BannerTagFeature
 from banners.serializers import BannerSerializer, BannerTagFeatureSerializer
 
@@ -14,8 +12,11 @@ class BannerList(APIView):
     """
     def get(self, request):
         banners = Banner.objects.all()
-        serializer = BannerSerializer(banners, many=True)
-        return Response(serializer.data)
+        paginator = LimitOffsetPagination()
+        page = paginator.paginate_queryset(banners, request)
+        serializer = BannerSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
 
     def post(self, request):
         data = request.data
