@@ -1,4 +1,5 @@
 
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
@@ -51,7 +52,7 @@ class User(APIView):
 
         if not tag_id or not feature_id:
             return Response(
-                {"error": "Incorrect data. Please provide both tag_id and feature_id"}, 
+                {"error": "Incorrect data. Please provide correct tag_id and feature_id"}, 
                 status=status.HTTP_400_BAD_REQUEST)
         
         # if use_last_revision:
@@ -61,9 +62,15 @@ class User(APIView):
             
 
         # Filter banners based on tag_id and feature_id
-        banner = get_object_or_404(BannerTagFeature, tag=tag_id, feature=feature_id)
+        try:
+            banner = BannerTagFeature.objects.get(tag=tag_id, feature=feature_id)
 
-    
+        except BannerTagFeature.DoesNotExist:
+            return Response(
+                {"error": "No banner found matching the given 'tag_id' and 'feature_id'"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         #Serializing only the content field
         serializer = BannerTagFeatureSerializer(banner)
         return Response(serializer.data)
