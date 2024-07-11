@@ -17,9 +17,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
-    'debug_toolbar',
     'rest_framework',
     'banners',
+    'debug_toolbar'
 ]
 
 MIDDLEWARE = [
@@ -95,3 +95,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
+
+INTERNAL_IPS = [
+    "127.0.0.1"
+]
