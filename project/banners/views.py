@@ -11,13 +11,41 @@ class BannerList(APIView):
     List all banners, or create a new banner.
     """
     def get(self, request):
-        banners = Banner.objects.all()
+        tag_id = request.query_params.get('tag_id')
+        feature_id = request.query_params.get('feature_id')
+
+        # Initial queryset
+        queryset = Banner.objects.all()
+
+        # Apply filtering based on query parameters
+        if tag_id and feature_id:
+            queryset = queryset.filter(tags__id=tag_id, feature__id=feature_id)
+        elif tag_id:
+            queryset = queryset.filter(tags__id=tag_id)
+        elif feature_id:
+            queryset = queryset.filter(feature__id=feature_id)
+        
+        # Prefetch related tags and features
+        #queryset = queryset.prefetch_related('tags', 'feature')
+        
+        if not queryset.exists():
+            return Response(
+                {"error": "No banner found matching the given parameters"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Apply pagination
         paginator = LimitOffsetPagination()
-        page = paginator.paginate_queryset(banners, request)
+        page = paginator.paginate_queryset(queryset, request)
+
+        # Serialize data
         serializer = BannerSerializer(page, many=True)
+
+        # Return paginated response
         return paginator.get_paginated_response(serializer.data)
-
-
+        
+        
+       
     def post(self, request):
         
         data = request.data
@@ -26,7 +54,7 @@ class BannerList(APIView):
         banner = serializer.save()
 
         # Process tags and create BannerTagFeature instances
-        tags = request.data.get('tags', [])
+        tags = request.data.get('tags')
         for tag_id in tags:
             tag_feature_data = {
                 'tag': tag_id,
