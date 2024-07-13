@@ -1,5 +1,3 @@
-
-from django.forms import ValidationError
 from rest_framework import serializers
 from banners.models import Banner,UserBanner,BannerTagFeature
 
@@ -16,7 +14,7 @@ class BannerSerializer(serializers.ModelSerializer):
         fields = ['id','tags','feature','content','is_active','created_at','updated_at']
        
 class BannerTagFeatureSerializer(serializers.ModelSerializer):
-    banner = BannerSerializer()
+    #banner = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = BannerTagFeature
         fields = ['tag','feature','banner']
