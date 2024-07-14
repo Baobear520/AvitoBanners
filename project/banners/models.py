@@ -21,6 +21,8 @@ class Banner(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+   
+
 class BannerTagFeature(models.Model):
     """Intermediate model to enforce the unique constraint for a tag and a feature"""
     

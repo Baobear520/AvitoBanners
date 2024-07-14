@@ -1,11 +1,12 @@
 from django.forms import ValidationError
 from django.db import transaction
+from django.http import Http404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 from banners.models import Banner, BannerTagFeature, Feature
-from banners.serializers import BannerSerializer, BannerTagFeatureSerializer
+from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer
 
 
 class BannerList(APIView):
@@ -79,13 +80,70 @@ class BannerList(APIView):
                     banner_tag_feature_serializer.save()
 
                 # Render only the required fields from the banner object
-                return Response(data={'banner_id': serializer.data['id']}, status=status.HTTP_201_CREATED)
+                return Response(
+                    data={'banner_id': serializer.data['id']}, 
+                    status=status.HTTP_201_CREATED
+                    )
 
         except ValidationError as e:
             if banner.id:
                 banner.delete()
             return Response({'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class BannerDetail(APIView):
+    """Update/delete a banner"""
+
+    def get_object(self, pk):
+        try:
+            return Banner.objects.get(pk=pk)
+        except Banner.DoesNotExist:
+            raise Http404
+        
+    def get(self,request,pk):
+        banner = self.get_object(pk)
+        serializer = BannerSerializer(banner)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+        
+    def patch(self, request, pk):
+        banner = self.get_object(pk)
+        data = request.data
+
+        try:
+            with transaction.atomic():
+                # Update the Banner object
+                serializer = UpdateBannerSerializer(banner, data=data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                banner = serializer.save()
+
+                # Process tags and update/create BannerTagFeature instances
+                tags = data.get('tags')
+                if tags is not None:
+                    BannerTagFeature.objects.filter(banner=banner).delete()  # Delete old tag-feature relations
+
+                    for tag_id in tags:
+                        tag_feature_data = {
+                            'tag': tag_id,
+                            'banner': banner.id,
+                            'feature': data.get('feature', banner.feature.id)
+                        }
+                        banner_tag_feature_serializer = BannerTagFeatureSerializer(data=tag_feature_data)
+                        banner_tag_feature_serializer.is_valid(raise_exception=True)
+                        banner_tag_feature_serializer.save()
+
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except ValidationError as e:
+            return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        banner = self.get_object(pk)
+        banner.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
 
 class User(APIView):
     """
@@ -133,7 +191,7 @@ class User(APIView):
         
         except Banner.DoesNotExist:
             return Response(
-                {"error": "No banner found matching the given parameters"},
+                {"error": "No banner matching the given parameters found"},
                 status=status.HTTP_404_NOT_FOUND)
         
         

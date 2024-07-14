@@ -14,7 +14,13 @@ class BannerSerializer(serializers.ModelSerializer):
         fields = ['id','tags','feature','content','is_active','created_at','updated_at']
        
 class BannerTagFeatureSerializer(serializers.ModelSerializer):
-    #banner = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = BannerTagFeature
         fields = ['tag','feature','banner']
+
+class UpdateBannerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Banner
+        fields = ['tags','feature','content','is_active']
