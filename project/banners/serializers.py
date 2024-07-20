@@ -6,7 +6,7 @@ from banners.models import Banner,UserBanner,BannerTagFeature
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserBanner
-        fields = ['id','use_last_revision','user_tag']
+        fields = ['id','is_superuser','use_last_revision','user_tag']
 
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:

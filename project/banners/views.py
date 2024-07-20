@@ -2,11 +2,13 @@ from django.forms import ValidationError
 from django.db import transaction
 from django.http import Http404
 from rest_framework import status
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework.pagination import LimitOffsetPagination
-from banners.models import Banner, BannerTagFeature, Feature
-from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer
+from banners.models import Banner, BannerTagFeature, UserBanner
+from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserSerializer
 
 
 class BannerList(APIView):
@@ -145,7 +147,7 @@ class BannerDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 
-class User(APIView):
+class UserBannerView(APIView):
     """
     Show current user's banner
     
@@ -164,25 +166,6 @@ class User(APIView):
         #     do smth
         # else: 
         # do smth else
-            
-
-        # Filter banners based on tag_id and feature_id
-        # Select related banner object
-        # try:
-        #     banner = BannerTagFeature.objects.prefetch_related('banner').get(
-        #         tag=tag_id, feature=feature_id
-        #         )
-        
-        # except BannerTagFeature.DoesNotExist:
-        #     return Response(
-        #         {"error": "No banner found matching the given 'tag_id' and 'feature_id'"},
-        #         status=status.HTTP_404_NOT_FOUND
-        #     )
-
-        # serializer = BannerSerializer(banner)
-        
-        # #Render only the content field
-        # return Response(serializer.data)
         
         try:
             queryset = Banner.objects.get(tags__id=tag_id, feature__id=feature_id)
@@ -195,3 +178,39 @@ class User(APIView):
                 status=status.HTTP_404_NOT_FOUND)
         
         
+class UserList(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self,request):
+        try:
+            queryset = UserBanner.objects.all()
+            users = UserSerializer(queryset,many=True)
+            return Response(data=users.data,status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e),status=status.HTTP_404_NOT_FOUND)
+    
+
+    def post(self,request):
+        data = request.data
+        serializer = UserSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+class UserDetail(APIView):
+    
+    permission_classes = [AllowAny]
+
+    def get_object(self, pk):
+        try:
+            return UserBanner.objects.get(pk=pk)
+        except UserBanner.DoesNotExist:
+            raise Http404
+        
+    def get(self,request,pk):
+        user = self.get_object(pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+        
+
