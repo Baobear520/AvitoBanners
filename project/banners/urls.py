@@ -10,4 +10,5 @@ urlpatterns = [
     path('banner/<int:pk>',views.BannerDetail.as_view()),
     path('user/',views.UserList.as_view()),
     path('user/<int:pk>',views.UserDetail.as_view()),
+    path('login/',views.LoginUser.as_view())
 ]

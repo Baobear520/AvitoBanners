@@ -1,12 +1,14 @@
 from django.forms import ValidationError
 from django.db import transaction
 from django.http import Http404
-from rest_framework import status
 
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.authtoken.models import Token
+
 from banners.models import Banner, BannerTagFeature, UserBanner
 from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserSerializer
 
@@ -16,7 +18,7 @@ class BannerList(APIView):
     List all banners with filtering by tag_id and/or feature_id, 
     or create a new banner.
     """
-
+    #permission_classes = [Admin]
     def get(self, request):
         tag_id = request.query_params.get('tag_id')
         feature_id = request.query_params.get('feature_id')
@@ -180,7 +182,7 @@ class UserBannerView(APIView):
         
 class UserList(APIView):
 
-    permission_classes = [AllowAny]
+    #permission_classes = [AllowAny]
 
     def get(self,request):
         try:
@@ -209,8 +211,29 @@ class UserDetail(APIView):
             raise Http404
         
     def get(self,request,pk):
+
         user = self.get_object(pk)
         serializer = UserSerializer(user)
         return Response(serializer.data,status=status.HTTP_200_OK)
         
 
+class LoginUser(APIView):
+    
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        #password = request.data.get('password')
+
+        if not username:
+            return Response({'error': 'Please provide username.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = UserBanner.objects.get(username=username)
+        except UserBanner.DoesNotExist:
+            return Response({'error': f"User {username} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        token, _ = Token.objects.get_or_create(user=user)
+        
+        return Response({'token': token.key}, status=status.HTTP_200_OK)
