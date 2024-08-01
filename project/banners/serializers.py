@@ -3,10 +3,10 @@ from banners.models import Banner,UserBanner,BannerTagFeature
 
 
 
-class UserSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserBanner
-        fields = ['id','username','is_superuser','is_staff','use_last_revision','user_tag']
+        fields = ['id','use_last_revision','user_tag']
 
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:

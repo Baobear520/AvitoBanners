@@ -3,15 +3,13 @@ from django.db import transaction
 from django.http import Http404
 
 from rest_framework import status
-from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny,IsAdminUser,IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.authtoken.models import Token
 
 from banners.models import Banner, BannerTagFeature, UserBanner
-from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserSerializer
+from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, ProfileSerializer, UpdateBannerSerializer
 
 
 class BannerList(APIView):
@@ -187,17 +185,17 @@ class UserBannerView(APIView):
                 status=status.HTTP_404_NOT_FOUND)
         
         
-class UserList(APIView):
+class ProfileList(APIView):
     
     """
-    Show the list of all users
+    Show the list of all banner service users
     
     """
     
     def get(self,request):
         try:
             queryset = UserBanner.objects.all()
-            users = UserSerializer(queryset,many=True)
+            users = ProfileSerializer(queryset,many=True)
             return Response(data=users.data,status=status.HTTP_200_OK)
         except Exception as e:
             return Response(str(e),status=status.HTTP_404_NOT_FOUND)
@@ -205,14 +203,14 @@ class UserList(APIView):
   
     def post(self,request):
         data = request.data
-        serializer = UserSerializer(data=data)
+        serializer = ProfileSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
-class UserDetail(APIView):
+class ProfileDetail(APIView):
     """
-    Show details of the user
+    Show details of the banner servise user
     
     """
     
@@ -227,28 +225,9 @@ class UserDetail(APIView):
     def get(self,request,pk):
 
         user = self.get_object(pk)
-        serializer = UserSerializer(user)
+        serializer = ProfileSerializer(user)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 
-class LoginUser(APIView):
-    
-    permission_classes = [AllowAny]
 
-    def post(self, request):
-        username = request.data.get('username')
-        #password = request.data.get('password')
-
-        if not username:
-            return Response({'error': 'Please provide username.'},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = UserBanner.objects.get(username=username)
-        except UserBanner.DoesNotExist:
-            return Response({'error': f"User {username} does not exist."}, status=status.HTTP_404_NOT_FOUND)
-
-        token, _ = Token.objects.get_or_create(user=user)
-        
-        return Response({'token': token.key}, status=status.HTTP_200_OK)
