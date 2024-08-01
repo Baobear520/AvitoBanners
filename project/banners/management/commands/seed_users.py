@@ -49,7 +49,7 @@ class Command(BaseCommand):
                     avito_user = AvitoUser.objects.create(**avito_user_data)
                     self.stdout.write(self.style.SUCCESS(f"User {avito_user_data['username']} has been created."))
 
-                    UserBanner.objects.create(avito_user=avito_user, **user_banner_data)
+                    UserBanner.objects.create(user=avito_user, **user_banner_data)
                     self.stdout.write(self.style.SUCCESS(f"Banner user profile for {avito_user_data['username']} has been created."))
 
         except Exception as e:
