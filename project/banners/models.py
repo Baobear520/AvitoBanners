@@ -47,3 +47,5 @@ class UserBanner(models.Model):
     use_last_revision = models.BooleanField(default=False)
     user_tag = models.ForeignKey(Tag,on_delete=models.CASCADE,verbose_name='tag_id')
     
+
+

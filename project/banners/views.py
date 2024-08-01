@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny,IsAdminUser,IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.authtoken.models import Token
 
-from banners.models import Banner, BannerTagFeature, Tag, UserBanner
+from banners.models import Banner, BannerTagFeature, UserBanner
 from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserSerializer
 
 
