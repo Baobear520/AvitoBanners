@@ -3,13 +3,14 @@ from django.db import transaction
 from django.http import Http404
 
 from rest_framework import status
+from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAdminUser,IsAuthenticated
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.authtoken.models import Token
 
-from banners.models import Banner, BannerTagFeature, UserBanner
+from banners.models import Banner, BannerTagFeature, Tag, UserBanner
 from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserSerializer
 
 
@@ -18,7 +19,8 @@ class BannerList(APIView):
     List all banners with filtering by tag_id and/or feature_id, 
     or create a new banner.
     """
-    #permission_classes = [Admin]
+    permission_classes = [IsAdminUser]
+    
     def get(self, request):
         tag_id = request.query_params.get('tag_id')
         feature_id = request.query_params.get('feature_id')
@@ -98,6 +100,8 @@ class BannerList(APIView):
 class BannerDetail(APIView):
     """Update/delete a banner"""
 
+    permission_classes = [IsAdminUser]
+
     def get_object(self, pk):
         try:
             return Banner.objects.get(pk=pk)
@@ -154,6 +158,9 @@ class UserBannerView(APIView):
     Show current user's banner
     
     """
+
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         tag_id = request.query_params.get('tag_id')
         feature_id = request.query_params.get('feature_id')
@@ -181,9 +188,12 @@ class UserBannerView(APIView):
         
         
 class UserList(APIView):
-
-    #permission_classes = [AllowAny]
-
+    
+    """
+    Show the list of all users
+    
+    """
+    
     def get(self,request):
         try:
             queryset = UserBanner.objects.all()
@@ -192,7 +202,7 @@ class UserList(APIView):
         except Exception as e:
             return Response(str(e),status=status.HTTP_404_NOT_FOUND)
     
-
+  
     def post(self,request):
         data = request.data
         serializer = UserSerializer(data=data)
@@ -201,8 +211,12 @@ class UserList(APIView):
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
 class UserDetail(APIView):
+    """
+    Show details of the user
     
-    permission_classes = [AllowAny]
+    """
+    
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         try:
@@ -215,7 +229,8 @@ class UserDetail(APIView):
         user = self.get_object(pk)
         serializer = UserSerializer(user)
         return Response(serializer.data,status=status.HTTP_200_OK)
-        
+
+
 
 class LoginUser(APIView):
     

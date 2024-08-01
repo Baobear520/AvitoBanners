@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User as BaseUser
+from django.conf import settings
 
 class Tag(models.Model):
     """Model class for tags"""
@@ -39,9 +39,11 @@ class BannerTagFeature(models.Model):
                 )
         ]
 
-class UserBanner(BaseUser):
+class UserBanner(models.Model):
+
     """Model class for users"""
-    
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
     use_last_revision = models.BooleanField(default=False)
     user_tag = models.ForeignKey(Tag,on_delete=models.CASCADE,verbose_name='tag_id')
     

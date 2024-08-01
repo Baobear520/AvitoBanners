@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
+    'core',
     'banners',
     'debug_toolbar'
 ]
@@ -66,7 +67,7 @@ DATABASES = {
     }
 }
 
-#AUTH_USER_MODEL = 'banners.UserBanner'
+AUTH_USER_MODEL = 'core.AvitoUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
