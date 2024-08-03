@@ -10,6 +10,8 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from banners.models import Banner, BannerTagFeature, UserBanner
 from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, ProfileSerializer, UpdateBannerSerializer
+from banners.permissions import IsSelfOrAdmin
+from core.models import AvitoUser
 
 
 class BannerList(APIView):
@@ -98,7 +100,6 @@ class BannerList(APIView):
 class BannerDetail(APIView):
     """Update/delete a banner"""
 
-    permission_classes = [IsAdminUser]
 
     def get_object(self, pk):
         try:
@@ -156,7 +157,7 @@ class UserBannerView(APIView):
     Show current user's banner
     
     """
-
+    
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -191,30 +192,41 @@ class ProfileList(APIView):
     Show the list of all banner service users
     
     """
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAdminUser()]  # Only staff users can access this view
+        return [IsAuthenticated()]  # For other methods, require authentication
     
+ 
     def get(self,request):
-        try:
-            queryset = UserBanner.objects.all()
-            users = ProfileSerializer(queryset,many=True)
-            return Response(data=users.data,status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(str(e),status=status.HTTP_404_NOT_FOUND)
+        
+        queryset = UserBanner.objects.all()
+        users = ProfileSerializer(queryset,many=True)
+        return Response(data=users.data,status=status.HTTP_200_OK)
+        
     
-  
-    def post(self,request):
+    def post(self, request):
+        user = AvitoUser.objects.get(pk=request.user.id)
+
+        # Check if the user already has a profile
+        if UserBanner.objects.filter(user=user).exists():
+            return Response({"detail": "Profile already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create the profile
         data = request.data
         serializer = ProfileSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
+        profile = serializer.save(user=user)
+        
+        return Response(ProfileSerializer(profile).data, status=status.HTTP_201_CREATED)
 
 class ProfileDetail(APIView):
     """
     Show details of the banner servise user
     
     """
-    
-    permission_classes = [IsAuthenticated]
+
+    permission_classes = [IsSelfOrAdmin]
 
     def get_object(self, pk):
         try:
@@ -225,8 +237,19 @@ class ProfileDetail(APIView):
     def get(self,request,pk):
 
         user = self.get_object(pk)
+        self.check_object_permissions(request, user)
         serializer = ProfileSerializer(user)
         return Response(serializer.data,status=status.HTTP_200_OK)
+
+    def patch(self,request, pk):
+        user = self.get_object(pk)
+        data = request.data
+        serializer = ProfileSerializer(user,data=data,partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
 
 
 
