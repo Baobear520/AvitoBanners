@@ -2,6 +2,12 @@ from rest_framework import serializers
 from core.models import AvitoUser
 
 
+class UpdateAvitoUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    class Meta:
+        model = AvitoUser
+        fields = ['id','is_staff','username','password','email','first_name','last_name','is_active']
+
 class ViewAvitoUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvitoUser

@@ -242,8 +242,10 @@ class ProfileDetail(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
 
     def patch(self,request, pk):
+
         user = self.get_object(pk)
         data = request.data
+        self.check_object_permissions(request, user)
         serializer = ProfileSerializer(user,data=data,partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
