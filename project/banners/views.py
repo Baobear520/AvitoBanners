@@ -4,7 +4,7 @@ from django.http import Http404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser,IsAuthenticated
+from rest_framework.permissions import IsAdminUser,IsAuthenticated, AllowAny
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import ValidationError,APIException
 
@@ -12,6 +12,7 @@ from banners.models import Banner, BannerTagFeature, UserBanner
 from banners.serializers import AdminProfileSerializer, BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserProfileSerializer
 from banners.permissions import IsSelfOrAdmin
 from core.models import AvitoUser
+from core.serializers import AdminAvitoUserSerializer, UserAvitoUserSerializer
 
 
 class BannerList(APIView):
@@ -115,7 +116,7 @@ class BannerList(APIView):
 class BannerDetail(APIView):
     """Update/delete a banner"""
 
-
+    permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
             return Banner.objects.get(pk=pk)
@@ -316,8 +317,8 @@ class ProfileDetail(APIView):
         Return the serializer class based on user permissions or other conditions.
         """
         if self.request.user.is_staff:
-            return AdminProfileSerializer
-        return UserProfileSerializer
+            return AdminProfileSerializer, AdminAvitoUserSerializer
+        return UserProfileSerializer,UserAvitoUserSerializer
     
 
     def get_object(self, pk):
@@ -326,11 +327,13 @@ class ProfileDetail(APIView):
         except UserBanner.DoesNotExist:
             raise Http404
         
+        
     def get(self,request,pk):
         try:
             user = self.get_object(pk)
             self.check_object_permissions(request, user)
-            serializer_class = self.get_serializer_class()
+            serializer_classes = self.get_serializer_class()
+            serializer_class = serializer_classes[0]
             serializer = serializer_class(user)
             return Response(serializer.data,status=status.HTTP_200_OK)
         
@@ -342,7 +345,7 @@ class ProfileDetail(APIView):
         except Exception as e:
             # Log the exception if needed
             return Response(
-                {"error": "An unexpected error occurred."},
+                {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def patch(self,request, pk):
@@ -350,7 +353,8 @@ class ProfileDetail(APIView):
             user = self.get_object(pk)
             data = request.data
             self.check_object_permissions(request, user)
-            serializer_class = self.get_serializer_class()
+            serializer_classes = self.get_serializer_class()
+            serializer_class = serializer_classes[0]
             serializer = serializer_class(user,data=data,partial=True)
             serializer.is_valid(raise_exception=True)
             updated_profile = serializer.save()
@@ -365,7 +369,7 @@ class ProfileDetail(APIView):
         except Exception as e:
             # Log the exception if needed
             return Response(
-                {"error": "An unexpected error occurred."},
+                {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
