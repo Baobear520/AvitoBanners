@@ -9,7 +9,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import ValidationError,APIException
 
 from banners.models import Banner, BannerTagFeature, UserBanner
-from banners.serializers import BannerSerializer, BannerTagFeatureSerializer, ProfileSerializer, UpdateBannerSerializer
+from banners.serializers import AdminProfileSerializer, BannerSerializer, BannerTagFeatureSerializer, UpdateBannerSerializer, UserProfileSerializer
 from banners.permissions import IsSelfOrAdmin
 from core.models import AvitoUser
 
@@ -260,7 +260,7 @@ class ProfileList(APIView):
     def get(self,request):
         try:
             queryset = UserBanner.objects.all()
-            users = ProfileSerializer(queryset,many=True)
+            users = AdminProfileSerializer(queryset,many=True)
             return Response(data=users.data,status=status.HTTP_200_OK)
         
         except APIException as e:
@@ -285,11 +285,11 @@ class ProfileList(APIView):
             
             # Create the profile
             data = request.data
-            serializer = ProfileSerializer(data=data)
+            serializer = UserProfileSerializer(data=data)
             serializer.is_valid(raise_exception=True)
-            profile = serializer.save(user=user)
+            serializer.save(user=user)
             
-            return Response(ProfileSerializer(profile).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         except APIException as e:
             return Response(
@@ -311,6 +311,15 @@ class ProfileDetail(APIView):
 
     permission_classes = [IsSelfOrAdmin]
 
+    def get_serializer_class(self):
+        """
+        Return the serializer class based on user permissions or other conditions.
+        """
+        if self.request.user.is_staff:
+            return AdminProfileSerializer
+        return UserProfileSerializer
+    
+
     def get_object(self, pk):
         try:
             return UserBanner.objects.get(pk=pk)
@@ -321,7 +330,8 @@ class ProfileDetail(APIView):
         try:
             user = self.get_object(pk)
             self.check_object_permissions(request, user)
-            serializer = ProfileSerializer(user)
+            serializer_class = self.get_serializer_class()
+            serializer = serializer_class(user)
             return Response(serializer.data,status=status.HTTP_200_OK)
         
         except APIException as e:
@@ -340,11 +350,12 @@ class ProfileDetail(APIView):
             user = self.get_object(pk)
             data = request.data
             self.check_object_permissions(request, user)
-            serializer = ProfileSerializer(user,data=data,partial=True)
+            serializer_class = self.get_serializer_class()
+            serializer = serializer_class(user,data=data,partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            updated_profile = serializer.save()
 
-            return Response(serializer.data,status=status.HTTP_200_OK)
+            return Response(serializer_class(updated_profile).data,status=status.HTTP_200_OK)
         
         except APIException as e:
                 return Response(

@@ -1,13 +1,19 @@
 from rest_framework import serializers
 from banners.models import Banner,UserBanner,BannerTagFeature
-from core.serializers import UpdateAvitoUserSerializer
+from core.serializers import AdminAvitoUserSerializer, UserAvitoUserSerializer
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    user = UpdateAvitoUserSerializer()
+class AdminProfileSerializer(serializers.ModelSerializer):
+    user = AdminAvitoUserSerializer()
     class Meta:
         model = UserBanner
-        fields = ['id','user','use_last_revision','user_tag']
+        fields = ['user','id','use_last_revision','user_tag']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    user = UserAvitoUserSerializer()
+    class Meta:
+        model = UserBanner
+        fields = ['user','user_tag']
 
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:

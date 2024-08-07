@@ -2,21 +2,22 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAdminUser
 
 from core.models import AvitoUser
-from core.serializers import CreateAvitoUserSerializer, ViewAvitoUserSerializer
+from core.serializers import AdminAvitoUserSerializer, CreateAvitoUserSerializer
 
 class AvitoUserList(APIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
             return [AllowAny()]
-        return super().get_permissions()
+        return [IsAdminUser()]
+    
     
     def get(self, request):
         users = AvitoUser.objects.all()
-        serializer = ViewAvitoUserSerializer(users,many=True)
+        serializer = AdminAvitoUserSerializer(users,many=True)
         
         return Response(serializer.data,status=status.HTTP_200_OK)
     
